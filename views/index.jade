@@ -1,0 +1,58 @@
+extends layout
+
+block content 
+    h1 Tokenizar tarjeta y crear cargo
+    form#card-form(method="post", action="/charge")
+        input(type="hidden", name="currency", value="MXN")
+        input(type="hidden", name="description", value="video tutorial de node con express.js")
+        input(type="hidden", name="reference_id", value="cargo_008_test_tutorial")
+    p
+        label Monto en centavos
+        input(type="text", name="amount")
+    p
+        label email de comprador
+        input(type="text", name="details[email]")
+    p
+        label Nombre del tarjeta habiente 
+        input(type="text", minlength="4", data-conekta="card[name]")   
+    p
+        label Número de tarjéta
+        input(type="text", minlength="15", maxlenght="16" data-conekta="card[number]")
+    p
+        label CVC 
+        input(type="text", minlength="3", maxlenght="4" data-conekta="card[cvc]") 
+    p
+        label Fecha de expiración (MM/AAAA) 
+        input(type="text", minlength="2", maxlenght="2" data-conekta="card[exp_month]")
+        | /
+        input(type="text", minlength="4", maxlenght="4" data-conekta="card[exp_year]")
+    p
+        button(type="submit") Pagar ahora.
+
+block script
+    script.
+        Conekta.setPublicKey('key_NVnyCHMv2shYYYJZ4kyc4FA');
+        var conektaSuccessResponseHandler;
+        conektaSuccessResponseHandler = function(token) { 
+            var $form;
+            $form = $("#card-form");
+            $form.append($('<input type="hidden" name="card" id="conektaTokenId">').val(token.id));
+            $form.get(0).submit(); //Hace submit
+        };
+        var conektaErrorResponseHandler;
+        conektaErrorResponseHandler = function(response) {
+            var $form;
+            $form = $("#card-form");
+            $form.find(".card-errors").text(response.message_to_purchaser);
+            $form.find("button").prop("disabled", false);
+        };
+        jQuery(function($) {
+        $("#card-form").submit(function(event) {
+            var $form;
+            $form = $(this);
+            $form.find("button").prop("disabled", true);
+            Conekta.token.create($form, conektaSuccessResponseHandler, conektaErrorResponseHandler);
+            return false;
+            });
+        });
+
